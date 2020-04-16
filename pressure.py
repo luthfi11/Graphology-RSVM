@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 PEN_PRESSURE = 0.0
 
@@ -15,6 +16,8 @@ def pressure(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     h, w = image.shape[:]
 
+    cv2.imshow('Grayscale', image)
+
     inverted = image
     for x in range(h):
         for y in range(w):
@@ -22,45 +25,47 @@ def pressure(image):
 
     cv2.imshow('Inversi', inverted)
 
-    filtered = bilateralFilter(inverted, 3)
-    cv2.imshow('Bilateral', filtered)
-
-    ret, thresh = cv2.threshold(filtered, 100, 255, cv2.THRESH_TOZERO)
-    cv2.imshow('Threshold', thresh)
-
     total_intensity = 0
     pixel_count = 0
     for x in range(h):
         for y in range(w):
-            if(thresh[x][y] > 0):
-                total_intensity += thresh[x][y]
+            if(inverted[x][y] > 100):
+                total_intensity += inverted[x][y]
                 pixel_count += 1
+
 
     average_intensity = float(total_intensity) / pixel_count
 
     PEN_PRESSURE = average_intensity
 
-    print(total_intensity)
-    print(pixel_count)
-    print("Average pen pressure: "+str(average_intensity))
+    print("Total Intensitas : ", total_intensity)
+    print("Jumlah Piksel : ",pixel_count)
+    print("Nilai Tekanan Tulisan : ", average_intensity)
+    print(determine_pen_pressure(average_intensity))
 
-    #print(determine_pen_pressure(average_intensity))
+    show_histogram(inverted)
 
-    return
 
 def determine_pen_pressure(raw_pen_pressure):
 	comment = ""
 	if(raw_pen_pressure > 180.0):
 		pen_pressure = 0
-		comment = "HEAVY"
+		comment = "Tekanan Kuat"
 	elif(raw_pen_pressure < 151.0):
 		pen_pressure = 1
-		comment = "LIGHT"
+		comment = "Tekanan Ringan"
 	else:
 		pen_pressure = 2
-		comment = "MEDIUM"
+		comment = "Tekanan Sedang"
 		
 	return pen_pressure, comment
+
+def show_histogram(img):
+    histr = cv2.calcHist([img],[0],None,[256],[0,256]) 
+    
+    plt.plot(histr) 
+    plt.show() 
+
 
 def start(file_name):
 	global PEN_PRESSURE
@@ -70,12 +75,17 @@ def start(file_name):
 	PEN_PRESSURE = round(PEN_PRESSURE, 2)
 	
 	return [PEN_PRESSURE]
+    
 
 def main():
-    image = cv2.imread('dataset/r06-103-s00-05.png')
-    cv2.imshow('Gambar Asli', image)
+    #image = cv2.imread('dataset/g06-026k-s03-02.png')
+    image = cv2.imread('sample_image/a.png')
+
+    #cv2.imshow('Gambar Asli', image)
 
     pressure(image)
+
+    #print(zoning(image))
 
     cv2.waitKey(0)
     return

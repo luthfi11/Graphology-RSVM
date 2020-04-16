@@ -9,8 +9,7 @@ def straighten(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     gray = cv2.bitwise_not(gray)
 
-    thresh = cv2.threshold(
-        gray, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU)[1]
 
     # contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # print(hierarchy)
@@ -34,8 +33,7 @@ def straighten(image):
     center = (w // 2, h // 2)
     M = cv2.getRotationMatrix2D(center, angle, 1.0)
 
-    rotated = cv2.warpAffine(
-        image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+    rotated = cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
 
     # cv2.line(rotated, (10, 10), (250, 10), (0, 255, 0), 2)
 
@@ -53,13 +51,12 @@ def straighten(image):
 def crop_image(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    ret, thresh = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY_INV)
+    ret, thresh = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
     kernel = np.ones((5, 100), np.uint8)
-    img_dilation = cv2.dilate(thresh, kernel, iterations=2)
+    img_dilation = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, (kernel))
 
-    #cv2.imshow("Di", img_dilation)
-    ctrs, hier = cv2.findContours(
-        img_dilation.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.imshow("Dilation", img_dilation)
+    ctrs, hier = cv2.findContours(img_dilation.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     sorted_ctrs = sorted(ctrs, key=lambda ctr: cv2.boundingRect(ctr)[0])
 
     for i, ctr in enumerate(sorted_ctrs):
@@ -71,26 +68,22 @@ def crop_image(image):
         roi = image[y:y+h, x:x+w]
         find_line(roi)
         cv2.imshow('Zone'+str(i), resize(roi))
-        #cv2.imwrite("Zona.png", resize(roi)) 
 
 
 def find_line(image):
     rot = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     rot = cv2.bitwise_not(rot)
-    rthresh = cv2.threshold(
-        rot, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-    contours, hierarchy = cv2.findContours(
-        rthresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    rthresh = cv2.threshold(rot, 0, 255, cv2.THRESH_OTSU)[1]
+    contours, hierarchy = cv2.findContours(rthresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
-    #cv2.imshow("tres", rthresh)
     xx = []
     yy = []
     hh = []
     for cnt in contours:
         x, y, w, h = cv2.boundingRect(cnt)
 
-        #if h > w or h < 20:
-            #continue
+        if h > w or h < 20:
+            continue
 
         #cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),2)
         #cv2.line(image, (x, y), (x+w, y), (0, 255, 0), 2)
@@ -111,17 +104,12 @@ def find_line(image):
         if bottomZoneBottom > image.shape[0]:
             bottomZoneBottom = image.shape[0]
 
-        cv2.line(image, (0, upperZoneTop),
-                 (image.shape[1], upperZoneTop), (0, 255, 0), 2)
-        cv2.line(image, (0, middleZoneTop),
-                 (image.shape[1], middleZoneTop), (0, 255, 0), 2)
-        cv2.line(image, (0, bottomZoneTop),
-                 (image.shape[1], bottomZoneTop), (0, 255, 0), 2)
-        cv2.line(image, (0, bottomZoneBottom),
-                 (image.shape[1], bottomZoneBottom), (0, 255, 0), 2)
+        cv2.line(image, (0, upperZoneTop), (image.shape[1], upperZoneTop), (0, 0, 255), 2)
+        cv2.line(image, (0, middleZoneTop), (image.shape[1], middleZoneTop), (255, 0, 0), 2)
+        cv2.line(image, (0, bottomZoneTop), (image.shape[1], bottomZoneTop), (0, 255, 0), 2)
+        cv2.line(image, (0, bottomZoneBottom), (image.shape[1], bottomZoneBottom), (0, 255, 0), 2)
 
-        separators = [upperZoneTop, middleZoneTop,
-                      bottomZoneTop, bottomZoneBottom]
+        separators = [upperZoneTop, middleZoneTop, bottomZoneTop, bottomZoneBottom]
 
         zone = check_zones(separators)
         print(zone)
@@ -192,9 +180,9 @@ def medianFilter(image, d):
     return image
 
 
-def threshold(image, t):
+def threshold(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    ret, image = cv2.threshold(image, t, 255, cv2.THRESH_BINARY_INV)
+    ret, image = cv2.threshold(image, 0, 255, cv2.THRESH_OTSU)
     return image
 
 
@@ -279,8 +267,8 @@ def resize(img):
     return img
 
 def main():
-    #image = cv2.imread('sample_image/test.jpg')
-    image = cv2.imread('sample_dataset/g06-011b-s05-01.png')
+    image = cv2.imread('sample_image/upperZone.jpg')
+    #image = cv2.imread('sample_dataset/c06-039-s01-01.png')
 
     #ss = straight(image)
     #cv2.imshow("Image", resize(image))
