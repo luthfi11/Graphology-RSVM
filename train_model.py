@@ -1,80 +1,108 @@
-import os
-import itertools
-from sklearn.svm import SVC
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-import pressure
-import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import ListedColormap
-from sklearn.preprocessing import StandardScaler
+import pandas as pd
 
-X_data = []
-y_data = []
+A = pd.read_csv('sample_data.csv') # A = matriks dataset
 
-if os.path.isfile("label_list"):
-    print("Info: label_list found.")
-    # =================================================================
-    with open("label_list", "r") as labels:
-        for line in labels:
-            content = line.split()
+alpha = 5
+e = []
+u = []
+m = 0 #baris matriks/jumlah data
+n = 0 #kolom matriks/jumlah fitur
+gamma = 0
 
-            X_data.append(float(content[0]))
-            y_data.append(content[1])
+percentage = 10 #persentase subset matriks yang akan digunakan
 
-    # ===============================================================
+def get_subset_matrix(A, percent):
+    count = int(len(A) * percent / 100)
+    return A.sample(count)
 
-    X = []
-    for a, b in zip(X_data, y_data):
-        X.append([a, b])
-        
-    X = StandardScaler().fit_transform(X)
+subset_A = get_subset_matrix(A, percentage)
+subset_A_pressure = subset_A[['Rerata', 'Persentase', 'Tekanan Tulisan']]
+subset_A_zone = subset_A[['Zona Atas', 'Zona Tengah', 'Zona Bawah', 'Dominasi Zona']]
+
+def smoothing_function(x):
+    return x + 1/alpha * np.log(1 + np.exp(-alpha * x))
+
+def get_next_u(current_u, step, step_direction):
+    return current_u + step * step_direction[0:n]
+
+def get_next_gamma(current_gamma, step, step_direction):
+    return current_gamma + step * step_direction[n, 0]
+
+def kernel_trick(A, subset_A):
+    return A.transpose()*A
+
+def plus_function(e, D, subset_D, A, subset_A, u, gamma):
+    return e-D*(kernel_trick(A, subset_A)*subset_D*u-e*gamma)
+
+def get_gradient(w, A, D, e, gamma, plus_function):
+    v = 5
+    return np.vstack((
+        w - v * np.transpose(A) * D * plus_function,
+        gamma + v * np.transpose(e) * D * plus_function
+    ))
+
+def calculate_hessian(plus_function, A, e):
+    s = 0.5 * np.sign(plus_function)
+    diag_s = np.identity(s.shape[0])
+
+    h11 = np.transpose(A) * diag_s * A
+    h12 = -np.transpose(A) * diag_s * e
+    h21 = -np.transpose(e) * diag_s * A
+    h22 = np.transpose(e) * diag_s * e
+
+    h = np.vstack((
+            np.hstack((h11,h12)),
+            np.hstack((h21,h22))
+        ))
+    v = 5
+    I = np.identity(h.shape[0])
+    return I+v*h
+
+def train_zone(A):
+    A = A[['Zona Atas', 'Zona Tengah', 'Zona Bawah', 'Dominasi Zona']]
+
+    subset_A = get_subset_matrix(A, percentage)
+    subset_A_zone = subset_A[['Zona Atas', 'Zona Tengah', 'Zona Bawah', 'Dominasi Zona']]
+
+    _m, _n = A.shape
+    m, n = subset_A_zone.shape
+
+    class_label_full = []
+    for i in range(_m):
+        if A.iloc[i]['Dominasi Zona'] == 'Atas':
+            class_label_full += [1]
+        else:
+            class_label_full += [-1]
+
+    class_label_subset = []
+    for i in range(m):
+        if subset_A_zone.iloc[i]['Dominasi Zona'] == 'Atas':
+            class_label_subset += [1]
+        else:
+            class_label_subset += [-1]
+
+    D = np.mat(np.reshape(np.diag(class_label_full),(_m,_m)))
+    subset_D = np.mat(np.reshape(np.diag(class_label_subset),(m,m)))
+
+    #ukuran e ganti full
+    e = np.mat(np.reshape([[1 for x in range(m)] for y in range(1)],(m,1)))
+    u = np.mat(np.reshape(1/8 * e[:m],(m,1)))
+    gamma = 0
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y_data, test_size=.3)
+    A_value = np.mat(np.reshape(A.values[:,range(3)],(_m,_n-1)))
+    subset_A_value = np.mat(np.reshape(subset_A.values[:,range(3)],(m,n-1)))
+    
+    #subset_D ganti dengan D
+    plus = plus_function(e, subset_D, subset_D, A_value, subset_A_value, u, gamma)
+    #subset A ganti dengan A
+    gradient_matrix = get_gradient(u, subset_A_value, subset_D, e, gamma, plus)
+    gradient = np.transpose(gradient_matrix) * gradient_matrix
+    
+    if(gradient > 0):
+        print(calculate_hessian(plus, subset_A_value, e))
 
-    clf = SVC(kernel='linear', C=1.0)
-    clf.fit(X_train, y_train)
-    print("Classifier 1 accuracy: ", accuracy_score(clf.predict(X_test), y_test))
 
-    # ===================================================================================================
 
-    h = .02
-    X1, X2 = np.meshgrid(np.arange(start = X[:, 0].min() - 1, stop = X[:, 0].max() + 1, step = 0.01),
-                     np.arange(start = X[:, 1].min() - 1, stop = X[:, 1].max() + 1, step = 0.01))
 
-    plt.contourf(X1, X2, clf.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
-                alpha = 0.75, cmap = ListedColormap(('red', 'green', 'blue')))
-
-    plt.xlim(X1.min(), X1.max())
-    plt.ylim(X2.min(), X2.max())
-
-    for i, j in enumerate(np.unique(y_train)):
-        plt.scatter(X[:, 0], X[:, 1], c = ListedColormap(('red', 'green', 'blue'))(i), label = j)
-
-    plt.title('SVM (Training set)')
-    plt.xlabel('Pressure')
-    plt.ylabel('Pressure Key')
-    plt.xticks(())
-    plt.yticks(())
-    plt.show()
-   
-    # ===================================================================================================
-
-    while True:
-        file_name = input("Enter file name to predict or z to exit: ")
-        if file_name == 'z':
-            break
-
-        raw_features = pressure.start(file_name)
-
-        raw_pen_pressure = raw_features[0]
-        pen_pressure, comment = pressure.determine_pen_pressure(
-            raw_pen_pressure)
-        print("Pen Pressure: "+comment)
-
-        print("Personality: ", clf.predict(
-            [[raw_pen_pressure, pen_pressure]]))
-        print("---------------------------------------------------")
-
-else:
-    print("Error: label_list file not found.")
+train_zone(A)
