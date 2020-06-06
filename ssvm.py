@@ -99,7 +99,7 @@ class SmoothSupportVectorMachine(SupportVectorMachine):
         """
         step = 1
         objective = self._objective_function(gamma, w)
-
+        #step direc = di
         next_w = self._get_next_w(w, step, step_direction)
         next_gamma = self._get_next_gamma(gamma, step, step_direction)
         next_objective = self._objective_function(next_gamma, next_w)
