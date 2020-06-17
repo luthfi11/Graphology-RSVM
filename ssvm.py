@@ -97,7 +97,7 @@ class SmoothSupportVectorMachine(SupportVectorMachine):
         :type step_gap: matrix
         :return: the next armijo step
         """
-        step = 1
+        step = 1 #λ
         objective = self._objective_function(gamma, w)
         #step direc = di
         next_w = self._get_next_w(w, step, step_direction)
@@ -134,7 +134,7 @@ class SmoothSupportVectorMachine(SupportVectorMachine):
 
         self._calculate_gradient(self._gamma, self._w)
 
-        step_direction = linalg.inv(self._hessian) * -1 * np.transpose(self._z_gradient)
+        step_direction = linalg.inv(self._hessian) * -1 * np.transpose(self._z_gradient) #di
         step_gap = np.transpose(step_direction) * np.transpose(self._z_gradient)
         step = self._get_next_armijo_step(self._w, self._gamma, step_direction, step_gap)
 
@@ -165,6 +165,31 @@ class SmoothSupportVectorMachine(SupportVectorMachine):
         :return:
         """
         return (np.dot(np.transpose(self._w), example) - self._gamma)[0, 0]
+
+    def get_accuracy(self, num_true_positives, num_false_positives, num_true_negatives, num_false_negatives):
+        return (num_true_positives + num_true_negatives) / (num_true_positives + num_true_negatives + num_false_positives + num_false_negatives)
+
+    def print_performance(self, results):
+        num_true_positives, num_false_positives, num_true_negatives, num_false_negatives = 0.0, 0.0, 0.0, 0.0
+
+        accuracies = []
+        for result in results:
+            predictions, class_labels = result['predictions'], result['class_labels']
+            for prediction, class_label in zip(predictions, class_labels):
+                if prediction > 0:
+                    if class_label > 0:
+                        num_true_positives += 1
+                    else:
+                        num_false_positives += 1
+                else:
+                    if class_label <= 0:
+                        num_true_negatives += 1
+                    else:
+                        num_false_negatives += 1
+
+                accuracies.append(get_accuracy(num_true_positives, num_false_positives, num_true_negatives, num_false_negatives))
+
+        print("Accuracy: {:0.3f} {:0.3f}".format(np.mean(accuracies), np.std(accuracies)))
 
 if __name__ == '__main__':
     results = SmoothSupportVectorMachine.solve_svm(*get_svm_inputs())
