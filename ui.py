@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import pandas as pd
+import feature_extract, time
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -45,8 +46,12 @@ class Ui_MainWindow(object):
         self.datasetTable.setFont(font)
         self.datasetTable.setObjectName("datasetTable")
 
+        header = pd.DataFrame({'Nama File':[],'Rerata':[],'Persentase':[],'Zona Atas':[],'Zona Tengah':[],'Zona Bawah':[],'Tekanan Tulisan':[],'Dominasi Zona':[]})
+        model = DatasetModel(header)
+        self.datasetTable.setModel(model)
+
         self.label = QtWidgets.QLabel(self.tabTrain)
-        self.label.setGeometry(QtCore.QRect(10, 15, 55, 16))
+        self.label.setGeometry(QtCore.QRect(10, 15, 100, 16))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(8)
@@ -66,6 +71,7 @@ class Ui_MainWindow(object):
         font.setFamily("Segoe UI")
         self.trainButton.setFont(font)
         self.trainButton.setObjectName("trainButton")
+        self.trainButton.setEnabled(False)
 
         self.progressText = QtWidgets.QTextBrowser(self.tabTrain)
         self.progressText.setGeometry(QtCore.QRect(140, 540, 520, 101))
@@ -97,6 +103,7 @@ class Ui_MainWindow(object):
         self.analysisButton = QtWidgets.QPushButton(self.testTab)
         self.analysisButton.setGeometry(QtCore.QRect(420, 300, 170, 41))
         self.analysisButton.setObjectName("analysisButton")
+        self.analysisButton.setEnabled(False)
 
         self.personalityText = QtWidgets.QTextBrowser(self.testTab)
         self.personalityText.setGeometry(QtCore.QRect(40, 450, 711, 141))
@@ -115,6 +122,7 @@ class Ui_MainWindow(object):
 
         self.loadButton.clicked.connect(self.onLoadButtonClick)
         self.browseImageButton.clicked.connect(self.onBrowseImageClick)
+        self.analysisButton.clicked.connect(self.onAnalysisButtonClick)
 
         self.retranslateUi(MainWindow)
         self.tabWidget.setCurrentIndex(0)
@@ -133,20 +141,37 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.testTab), "Pengujian")
 
     def onLoadButtonClick(self):
-        dataset = pd.read_csv('sample_data.csv')
-        model = DatasetModel(dataset)
+        dialog = QtWidgets.QFileDialog()
+        folderName = dialog.getExistingDirectory(None, "Pilih Folder Dataset")
 
-        self.datasetTable.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
-        self.datasetTable.setModel(model)
+        if folderName is not '':
+            dataset = feature_extract.test(folderName)
+            model = DatasetModel(dataset)
+
+            self.datasetTable.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+            self.datasetTable.setModel(model)
+
+            self.label.setText("Dataset ("+str(dataset.shape[0])+")")
+
+            if dataset.shape[0] > 0:
+                self.trainButton.setEnabled(True)
+            else:
+                self.trainButton.setEnabled(False)
 
     def onBrowseImageClick(self):
         dialog = QtWidgets.QFileDialog()
         filename = dialog.getOpenFileName(None, "Cari Gambar Tulisan Tangan", "", "Image File (*.png *.jpg *.jpeg)")
-        if filename is not None:
+        if filename is not '':
             pixmap = QtGui.QPixmap(filename[0]).scaled(700, 240, QtCore.Qt.KeepAspectRatio)
             self.handwritingImage.setPixmap(pixmap)
             self.handwritingImage.setScaledContents(False)
             self.handwritingImage.setAlignment(QtCore.Qt.AlignCenter)
+
+            self.analysisButton.setEnabled(True)
+
+    def onAnalysisButtonClick(self):
+        self.personalityText.setHtml("Bagus")
+        
 
 class DatasetModel(QtCore.QAbstractTableModel):
 

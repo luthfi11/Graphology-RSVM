@@ -1,4 +1,3 @@
-"""
 from __future__ import with_statement
 from PIL import Image
  
@@ -19,4 +18,3 @@ with open('output_file.csv', 'w+') as f:
       b = pix[y,x][2]
       f.write('{0} {1} {2},'.format(r,g,b))
     f.write('\n')
-"""

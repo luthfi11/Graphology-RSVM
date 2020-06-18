@@ -67,11 +67,9 @@ def start(file_name):
 	
 	return [total, count, clas]
     
-
 def main():
-    #image = cv2.imread('dataset/m06-106-s01-01.png')
-    image = cv2.imread('sample_image/graying.jpg')
-
+    image = cv2.imread('dataset/m06-106-s01-01.png')
+    
     pressure(image)
 
     #print(zoning(image))
