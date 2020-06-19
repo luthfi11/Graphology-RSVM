@@ -16,8 +16,8 @@ percentage = 10 #persentase subset matriks yang akan digunakan
 
 def get_subset_matrix(A, percent):
     count = int(len(A) * percent / 100)
-    #return A.sample(count)
-    return A.iloc[[0,1,5]]
+    return A.sample(count)
+    #return A.iloc[[0,1,5]]
 
 subset_A = get_subset_matrix(A, percentage)
 subset_A_pressure = subset_A[['Rerata', 'Persentase', 'Tekanan Tulisan']]
@@ -133,10 +133,18 @@ def train_zone(A):
         
         gradient = step * (np.transpose(gradient_matrix) * gradient_matrix)[0, 0]
         
-    x = np.array([[90,20,22]])
-    g = kernel_trick(x, subset_A_value)*subset_D*next_u-next_gamma
-    
-    predict = np.sign(g)
-    print(predict)
+    return [subset_A_value, subset_D, next_u, next_gamma]
+
+def predict(x, subset_A, subset_D, u, gamma):
+    return np.sign(kernel_trick(x, subset_A)*subset_D*u-gamma)
+
+def result(_class):
+    personality = ""
+    if _class == 1:
+        personality = "Lebih memperhatikan aspek spiritual, impian, harapan, dan ambisi dalam hidupnya. Penulisa lebih suka melakukan kegiatan berpikir dan memikirkan masa depannya"
+    else:
+        personality = "Lebih mementingkan aspek fisik kehidupan dan lebih mengandalkan ototnya daripada otaknya"
+
+    return personality
     
 train_zone(A)

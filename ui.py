@@ -1,11 +1,21 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import pandas as pd
-import feature_extract, time
+import zones
+import feature_extract
+import train_model
+import collections
+import numpy as np
 
 class Ui_MainWindow(object):
+    datasetHeader = pd.DataFrame({'Nama File':[],'Rerata':[],'Persentase':[],'Zona Atas':[],'Zona Tengah':[],'Zona Bawah':[],'Tekanan Tulisan':[],'Dominasi Zona':[]})
+    dataset = {}
+    rsvmModel = []
+    imageToPredic = ""
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 700)
+
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -31,8 +41,6 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.tabWidget.sizePolicy().hasHeightForWidth())
 
         self.tabWidget.setSizePolicy(sizePolicy)
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
         self.tabWidget.setFont(font)
         self.tabWidget.setObjectName("tabWidget")
 
@@ -41,49 +49,40 @@ class Ui_MainWindow(object):
 
         self.datasetTable = QtWidgets.QTableView(self.tabTrain)
         self.datasetTable.setGeometry(QtCore.QRect(3, 50, 790, 390))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
         self.datasetTable.setFont(font)
         self.datasetTable.setObjectName("datasetTable")
 
-        header = pd.DataFrame({'Nama File':[],'Rerata':[],'Persentase':[],'Zona Atas':[],'Zona Tengah':[],'Zona Bawah':[],'Tekanan Tulisan':[],'Dominasi Zona':[]})
-        model = DatasetModel(header)
+        model = DatasetModel(self.datasetHeader)
         self.datasetTable.setModel(model)
 
         self.label = QtWidgets.QLabel(self.tabTrain)
         self.label.setGeometry(QtCore.QRect(10, 15, 100, 16))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(8)
         self.label.setFont(font)
         self.label.setObjectName("label")
 
-        self.loadButton = QtWidgets.QPushButton(self.tabTrain)
-        self.loadButton.setGeometry(QtCore.QRect(650, 10, 131, 28))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        self.loadButton.setFont(font)
-        self.loadButton.setObjectName("loadButton")
+        self.loadByCSVButton = QtWidgets.QPushButton(self.tabTrain)
+        self.loadByCSVButton.setGeometry(QtCore.QRect(615, 10, 170, 30))
+        self.loadByCSVButton.setFont(font)
+        self.loadByCSVButton.setObjectName("loadButton")
+
+        self.loadByFolderButton = QtWidgets.QPushButton(self.tabTrain)
+        self.loadByFolderButton.setGeometry(QtCore.QRect(435, 10, 170, 30))
+        self.loadByFolderButton.setFont(font)
+        self.loadByFolderButton.setObjectName("loadByFolderButton")
 
         self.trainButton = QtWidgets.QPushButton(self.tabTrain)
         self.trainButton.setGeometry(QtCore.QRect(335, 460, 130, 35))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
         self.trainButton.setFont(font)
         self.trainButton.setObjectName("trainButton")
         self.trainButton.setEnabled(False)
 
         self.progressText = QtWidgets.QTextBrowser(self.tabTrain)
         self.progressText.setGeometry(QtCore.QRect(140, 540, 520, 101))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
         self.progressText.setFont(font)
         self.progressText.setObjectName("progressText")
 
         self.label_2 = QtWidgets.QLabel(self.tabTrain)
         self.label_2.setGeometry(QtCore.QRect(140, 510, 55, 16))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
         self.label_2.setFont(font)
         self.label_2.setObjectName("label_2")
 
@@ -120,7 +119,9 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
-        self.loadButton.clicked.connect(self.onLoadButtonClick)
+        self.loadByFolderButton.clicked.connect(self.onLoadFolderClick)
+        self.loadByCSVButton.clicked.connect(self.onLoadCSVClick)
+        self.trainButton.clicked.connect(self.onTrainButtonClick)
         self.browseImageButton.clicked.connect(self.onBrowseImageClick)
         self.analysisButton.clicked.connect(self.onAnalysisButtonClick)
 
@@ -131,7 +132,8 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle("Pengenalan Kepribadian Berdasarkan Tulisan Tangan")
         self.label.setText("Dataset")
-        self.loadButton.setText("Muat Dataset")
+        self.loadByCSVButton.setText("Muat Dataset Dari CSV")
+        self.loadByFolderButton.setText("Muat Dataset Dari Folder")
         self.trainButton.setText("Latih Dataset")
         self.label_2.setText("Progress")
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabTrain), "Pelatihan")
@@ -140,28 +142,57 @@ class Ui_MainWindow(object):
         self.label_3.setText("Kepribadian")
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.testTab), "Pengujian")
 
-    def onLoadButtonClick(self):
+    def onLoadFolderClick(self):
         dialog = QtWidgets.QFileDialog()
         folderName = dialog.getExistingDirectory(None, "Pilih Folder Dataset")
 
         if folderName is not '':
             dataset = feature_extract.test(folderName)
-            model = DatasetModel(dataset)
-
-            self.datasetTable.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
-            self.datasetTable.setModel(model)
-
-            self.label.setText("Dataset ("+str(dataset.shape[0])+")")
-
             if dataset.shape[0] > 0:
-                self.trainButton.setEnabled(True)
+                self.showDataset(dataset=dataset)
             else:
-                self.trainButton.setEnabled(False)
+                QtWidgets.QMessageBox.information(None, "Informasi", "Dataset Kosong!")
+
+    def onLoadCSVClick(self):
+        dialog = QtWidgets.QFileDialog()
+        filename = dialog.getOpenFileName(None, "Pilih Dataset CSV", "", "CSV File (*.csv)")
+        if filename[0] is not '':
+            dataset = pd.read_csv(filename[0])
+            try:
+                if (self.datasetHeader.columns.values == dataset.columns.values).all():
+                    if dataset.shape[0] > 0:
+                        self.showDataset(dataset=dataset)
+                    else:
+                        QtWidgets.QMessageBox.information(None, "Informasi", "Dataset Kosong!")
+                    self.showDataset(dataset)
+                else:
+                    QtWidgets.QMessageBox.warning(None, "Terjadi Kesalahan", "Harap masukan dataset yang valid untuk menjalankan proses pelatihan data!")
+            except:
+                QtWidgets.QMessageBox.warning(None, "Terjadi Kesalahan", "Harap masukan dataset yang valid untuk menjalankan proses pelatihan data!")
+
+    def showDataset(self, dataset):
+        self.dataset =  dataset
+        model = DatasetModel(dataset)
+        self.datasetTable.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+        self.datasetTable.setModel(model)
+
+        self.label.setText("Dataset ("+str(dataset.shape[0])+")")
+
+        if dataset.shape[0] > 0:
+            self.trainButton.setEnabled(True)
+        else:
+            self.trainButton.setEnabled(False)
+
+    def onTrainButtonClick(self):
+        model = train_model.train_zone(self.dataset)
+        self.rsvmModel = model
+        self.progressText.setHtml("Done")
 
     def onBrowseImageClick(self):
         dialog = QtWidgets.QFileDialog()
-        filename = dialog.getOpenFileName(None, "Cari Gambar Tulisan Tangan", "", "Image File (*.png *.jpg *.jpeg)")
-        if filename is not '':
+        filename = dialog.getOpenFileName(None, "Pilih Gambar Tulisan Tangan", "", "Image File (*.png *.jpg *.jpeg)")
+        if filename[0] is not '':
+            self.imageToPredic = filename[0]
             pixmap = QtGui.QPixmap(filename[0]).scaled(700, 240, QtCore.Qt.KeepAspectRatio)
             self.handwritingImage.setPixmap(pixmap)
             self.handwritingImage.setScaledContents(False)
@@ -170,7 +201,14 @@ class Ui_MainWindow(object):
             self.analysisButton.setEnabled(True)
 
     def onAnalysisButtonClick(self):
-        self.personalityText.setHtml("Bagus")
+        if not self.rsvmModel:
+            QtWidgets.QMessageBox.warning(None, "Terjadi Kesalahan", "Silahkan lakukan proses pelatihan terlebih dahulu untuk melakukan pengenalan kepribadian!")
+        else:
+            x = zones.start(self.imageToPredic)
+            predict = train_model.predict([x[:-1]], self.rsvmModel[0], self.rsvmModel[1], self.rsvmModel[2], self.rsvmModel[3])
+            result = train_model.result(predict)
+            print(predict)
+            self.personalityText.setHtml(result)
         
 
 class DatasetModel(QtCore.QAbstractTableModel):
