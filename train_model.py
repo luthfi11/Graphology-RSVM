@@ -16,8 +16,8 @@ percentage = 10 #persentase subset matriks yang akan digunakan
 
 def get_subset_matrix(A, percent):
     count = int(len(A) * percent / 100)
-    return A.sample(count)
-    #return A.iloc[[0,1,5]]
+    #return A.sample(count)
+    return A.iloc[[0,1,5]]
 
 subset_A = get_subset_matrix(A, percentage)
 subset_A_pressure = subset_A[['Rerata', 'Persentase', 'Tekanan Tulisan']]

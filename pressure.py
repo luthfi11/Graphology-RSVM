@@ -66,7 +66,13 @@ def start(file_name):
 	total, count, clas = pressure(image)
 	
 	return [total, count, clas]
-    
+
+def extract(file_name):
+    image = cv2.imread(file_name)
+    total, count, clas = pressure(image)
+	
+    return [total, count]
+
 def main():
     image = cv2.imread('dataset/m06-106-s01-01.png')
     

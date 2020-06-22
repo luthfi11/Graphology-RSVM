@@ -110,6 +110,12 @@ def start(file_name):
 	
 	return [top, middle, bottom, clas]
 
+def extract(file_name):
+    image = cv2.imread(file_name)
+    top, middle, bottom, clas = findZone(image)
+	
+    return [top, middle, bottom]
+
 def main():
     img = cv2.imread('dataset/h06-089-s01-00.png')
     

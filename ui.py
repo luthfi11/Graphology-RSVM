@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import pandas as pd
-import zones
+import zones, pressure
 import feature_extract
 import train_model
 import collections
@@ -104,12 +104,21 @@ class Ui_MainWindow(object):
         self.analysisButton.setObjectName("analysisButton")
         self.analysisButton.setEnabled(False)
 
+        self.featureImageTable = QtWidgets.QTableView(self.testTab)
+        self.featureImageTable.setGeometry(QtCore.QRect(145, 370, 510, 65))
+        self.featureImageTable.setFont(font)
+        self.featureImageTable.setObjectName("featureImageTable")
+
+        model = QtGui.QStandardItemModel()
+        model.setHorizontalHeaderLabels(self.datasetHeader.columns.values[1:-2])
+        self.featureImageTable.setModel(model)
+
         self.personalityText = QtWidgets.QTextBrowser(self.testTab)
-        self.personalityText.setGeometry(QtCore.QRect(40, 450, 711, 141))
+        self.personalityText.setGeometry(QtCore.QRect(40, 480, 711, 141))
         self.personalityText.setObjectName("personalityText")
 
         self.label_3 = QtWidgets.QLabel(self.testTab)
-        self.label_3.setGeometry(QtCore.QRect(42, 420, 91, 16))
+        self.label_3.setGeometry(QtCore.QRect(42, 450, 91, 16))
         self.label_3.setObjectName("label_3")
 
         self.tabWidget.addTab(self.testTab, "")
@@ -204,11 +213,17 @@ class Ui_MainWindow(object):
         if not self.rsvmModel:
             QtWidgets.QMessageBox.warning(None, "Terjadi Kesalahan", "Silahkan lakukan proses pelatihan terlebih dahulu untuk melakukan pengenalan kepribadian!")
         else:
-            x = zones.start(self.imageToPredic)
-            predict = train_model.predict([x[:-1]], self.rsvmModel[0], self.rsvmModel[1], self.rsvmModel[2], self.rsvmModel[3])
+            x = zones.extract(self.imageToPredic)
+            y = pressure.extract(self.imageToPredic)
+
+            predict = train_model.predict([x], self.rsvmModel[0], self.rsvmModel[1], self.rsvmModel[2], self.rsvmModel[3])
             result = train_model.result(predict)
-            print(predict)
             self.personalityText.setHtml(result)
+
+            extractData = pd.DataFrame({'Rerata':[y[0]],'Persentase':[y[1]],'Zona Atas':[x[0]],'Zona Tengah':[x[1]],'Zona Bawah':[x[2]]})
+            model = DatasetModel(extractData)
+            self.featureImageTable.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+            self.featureImageTable.setModel(model)
         
 
 class DatasetModel(QtCore.QAbstractTableModel):
