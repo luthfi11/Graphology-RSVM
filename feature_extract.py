@@ -20,8 +20,12 @@ def test(directory):
                 'Zona Tengah':int(features[5]),'Zona Bawah':int(features[6]),'Tekanan Tulisan':features[3],'Dominasi Zona':features[7]}
 
             dataset = dataset.append(new_data, ignore_index=True)
+            print(label,"Done")
         else:
             continue
     
     return dataset
 
+
+#xx = test("D:\DataKuliah\Skripsi\App\Graphology-RSVM\sample_dataset")
+#xx.to_csv('sample_data_300.csv')

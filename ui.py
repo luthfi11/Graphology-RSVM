@@ -193,7 +193,7 @@ class Ui_MainWindow(object):
             self.trainButton.setEnabled(False)
 
     def onTrainButtonClick(self):
-        model = train_model.train_zone(self.dataset)
+        model = train_model.train_zone(self.dataset, "Atas", "Tengah")
         self.rsvmModel = model
         self.progressText.setHtml("Done")
 
@@ -216,8 +216,9 @@ class Ui_MainWindow(object):
             x = zones.extract(self.imageToPredic)
             y = pressure.extract(self.imageToPredic)
 
+            zone_class = ["Atas", "Tengah", "Bawah"]
             predict = train_model.predict([x], self.rsvmModel[0], self.rsvmModel[1], self.rsvmModel[2], self.rsvmModel[3])
-            result = train_model.result(predict)
+            result = train_model.result_zone(zone_class[predict])
             self.personalityText.setHtml(result)
 
             extractData = pd.DataFrame({'Rerata':[y[0]],'Persentase':[y[1]],'Zona Atas':[x[0]],'Zona Tengah':[x[1]],'Zona Bawah':[x[2]]})

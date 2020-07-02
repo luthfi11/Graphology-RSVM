@@ -1,1 +1,1 @@
-model
+[np.ones(30)])

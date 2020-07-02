@@ -68,9 +68,10 @@ def calculate_hessian(plus_function, A, e):
     
     return I+v*h
 
-def train_zone(A):
+def train_zone(A, class1, class2):
     A = A[['Zona Atas', 'Zona Tengah', 'Zona Bawah', 'Dominasi Zona']]
-
+    A = A.loc[(A['Dominasi Zona'] == class1) | (A['Dominasi Zona'] == class2)]
+    
     subset_A = get_subset_matrix(A, percentage)
     subset_A_zone = subset_A[['Zona Atas', 'Zona Tengah', 'Zona Bawah', 'Dominasi Zona']]
 
@@ -79,14 +80,14 @@ def train_zone(A):
 
     class_label_full = []
     for i in range(_m):
-        if A.iloc[i]['Dominasi Zona'] == 'Atas':
+        if A.iloc[i]['Dominasi Zona'] == class1:
             class_label_full += [1]
         else:
             class_label_full += [-1]
 
     class_label_subset = []
     for i in range(m):
-        if subset_A_zone.iloc[i]['Dominasi Zona'] == 'Atas':
+        if subset_A_zone.iloc[i]['Dominasi Zona'] == class1:
             class_label_subset += [1]
         else:
             class_label_subset += [-1]
@@ -95,12 +96,12 @@ def train_zone(A):
     subset_D = np.mat(np.reshape(np.diag(class_label_subset),(m,m)))
 
     e = np.mat(np.reshape([[1 for x in range(_m)] for y in range(1)],(_m,1)))
-    u = np.mat(np.reshape(1/8 * e[:m],(m,1)))
+    u = np.mat(np.zeros((m, 1)))
     gamma = 0
     
     A_value = np.mat(np.reshape(A.values[:,range(3)],(_m,_n-1)))
     subset_A_value = np.mat(np.reshape(subset_A.values[:,range(3)],(m,n-1)))
-
+    
     plus = plus_function(e, D, subset_D, A_value, subset_A_value, u, gamma)
     plus = (plus < 0).choose(plus, 0)
     
@@ -124,27 +125,67 @@ def train_zone(A):
 
         objective_difference = objective - next_objective
         
-        while objective_difference < -0.05 * step * step_gap:
+        while objective_difference < -0.05 * step * step_gap :
             step *= 0.5
             next_u = get_next_u(u, step, step_direction, n)
             next_gamma = get_next_gamma(gamma, step, step_direction, n)
             next_objective = objective_function(e, D, subset_D, A_value, subset_A_value, next_u, next_gamma)
             objective_difference = objective - next_objective
-        
+
         gradient = step * (np.transpose(gradient_matrix) * gradient_matrix)[0, 0]
         
     return [subset_A_value, subset_D, next_u, next_gamma]
 
-def predict(x, subset_A, subset_D, u, gamma):
-    return np.sign(kernel_trick(x, subset_A)*subset_D*u-gamma)
+def classifier():
+    zone_class = ["Atas", "Tengah", "Bawah"]
+    pressure_class = ["Kuat, Sedang", "Ringan"]
 
-def result(_class):
+    zone_model = []
+
+    zone_model = zone_model + [train_zone(A, zone_class[0], zone_class[1])]
+    zone_model = zone_model + [train_zone(A, zone_class[0], zone_class[2])]
+    zone_model = zone_model + [train_zone(A, zone_class[1], zone_class[2])]
+
+    x = [28,23,50]
+
+    pred = []
+    for i in range(3):
+        pred = pred + [predict(x, zone_model[i][0], zone_model[i][1], zone_model[i][2], zone_model[i][3])]
+
+    print(pred)
+
+def predict(x, subset_A, subset_D, u, gamma):
+    return np.array(np.sign(kernel_trick(x, subset_A)*subset_D*u-gamma))[0][0]
+
+def result_zone(_class):
     personality = ""
-    if _class == 1:
-        personality = "Lebih memperhatikan aspek spiritual, impian, harapan, dan ambisi dalam hidupnya. Penulisa lebih suka melakukan kegiatan berpikir dan memikirkan masa depannya"
+    if _class == "Atas":
+        personality = "Penulis lebih memperhatikan aspek spiritual, impian, harapan, dan ambisi dalam hidupnya. Penulis lebih suka melakukan kegiatan berpikir dan memikirkan masa depannya"
+    elif _class == "Tengah":
+        personality = "Penulis lebih mementingkan kehidupannya saat ini dan sulit untuk membuat rencana jangka panjang mereka"
     else:
-        personality = "Lebih mementingkan aspek fisik kehidupan dan lebih mengandalkan ototnya daripada otaknya"
+        personality = "Penulis lebih mementingkan aspek fisik kehidupan dan lebih mengandalkan ototnya daripada otaknya"
+
+    return personality
+
+def result_pressure(_class):
+    personality = ""
+    if _class == "Kuat":
+        personality = "Penulis memiliki tingkat emosional yang tinggi, sulit beradaptasi, selalu serius akan segala sesuatu, tegas, dan memiliki keinginan yang kuat"
+    elif _class == "Sedang":
+        personality = "Penulis memiliki kemampuan untuk mengontrol emosinya dengan baik, nyaman, dan tidak suka memendam kemarahan"
+    else:
+        personality = "Penulis memiliki kepribadian yang tenang dan santai, lebih sensitif, pengertian, dan sulit mengambil keputusan karena mudah terpengaruh"
 
     return personality
     
-train_zone(A)
+#classifier()
+x = train_zone(A, "Atas", "Bawah")
+print(x)
+"""
+            SVC(
+              	C=1000000.0, cache_size=200, class_weight=None,
+                coef0=0.0, degree=3, gamma=0.0001, kernel='rbf',
+                max_iter=-1, probability=False, random_state=None,
+                shrinking=True, tol=0.001, verbose=False)
+"""
