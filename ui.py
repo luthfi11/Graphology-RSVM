@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import pandas as pd
 import zones, pressure
 import feature_extract
-import train_model
+import rsvm
 import collections
 import numpy as np
 
@@ -77,12 +77,12 @@ class Ui_MainWindow(object):
         self.trainButton.setEnabled(False)
 
         self.progressText = QtWidgets.QTextBrowser(self.tabTrain)
-        self.progressText.setGeometry(QtCore.QRect(140, 540, 520, 101))
+        self.progressText.setGeometry(QtCore.QRect(10, 530, 780, 110))
         self.progressText.setFont(font)
         self.progressText.setObjectName("progressText")
 
         self.label_2 = QtWidgets.QLabel(self.tabTrain)
-        self.label_2.setGeometry(QtCore.QRect(140, 510, 55, 16))
+        self.label_2.setGeometry(QtCore.QRect(10, 510, 100, 16))
         self.label_2.setFont(font)
         self.label_2.setObjectName("label_2")
 
@@ -144,7 +144,7 @@ class Ui_MainWindow(object):
         self.loadByCSVButton.setText("Muat Dataset Dari CSV")
         self.loadByFolderButton.setText("Muat Dataset Dari Folder")
         self.trainButton.setText("Latih Dataset")
-        self.label_2.setText("Progress")
+        self.label_2.setText("Hasil Pelatihan")
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabTrain), "Pelatihan")
         self.browseImageButton.setText("Pilih Citra")
         self.analysisButton.setText("Analisis Kepribadian")
@@ -180,7 +180,7 @@ class Ui_MainWindow(object):
                 QtWidgets.QMessageBox.warning(None, "Terjadi Kesalahan", "Harap masukan dataset yang valid untuk menjalankan proses pelatihan data!")
 
     def showDataset(self, dataset):
-        self.dataset =  dataset
+        self.dataset = dataset
         model = DatasetModel(dataset)
         self.datasetTable.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
         self.datasetTable.setModel(model)
@@ -193,9 +193,19 @@ class Ui_MainWindow(object):
             self.trainButton.setEnabled(False)
 
     def onTrainButtonClick(self):
-        model = train_model.train_zone(self.dataset, "Atas", "Tengah")
-        self.rsvmModel = model
-        self.progressText.setHtml("Done")
+        model_zone = rsvm.train_zone(self.dataset)
+        model_pressure = rsvm.train_pressure(self.dataset)
+        self.rsvmModel = model_zone + model_pressure
+
+        modelText = "Done<br><br><b>Model Zona Atas-Tengah:</b><br><b>u :</b> "+str(model_zone[0].get('w'))+"<br><b>gamma :</b> "+str(model_zone[0].get('b'))
+        modelText += "<br><br><b>Model Zona Atas-Bawah:</b><br><b>u :</b> "+str(model_zone[1].get('w'))+"<br><b>gamma :</b> "+str(model_zone[1].get('b'))
+        modelText += "<br><br><b>Model Zona Tengah-Bawah:</b><br><b>u :</b> "+str(model_zone[2].get('w'))+"<br><b>gamma :</b> "+str(model_zone[2].get('b'))
+        
+        modelText += "<br><hr><br><b>Model Tekanan Kuat-Sedang:</b><br><b>u :</b> "+str(model_pressure[1].get('w'))+"<br><b>gamma :</b> "+str(model_pressure[1].get('b'))
+        modelText += "<br><br><b>Model Tekanan Kuat-Ringan:</b><br><b>u :</b> "+str(model_pressure[2].get('w'))+"<br><b>gamma :</b> "+str(model_pressure[2].get('b'))
+        modelText += "<br><br><b>Model Tekanan Sedang-Ringan:</b><br><b>u :</b> "+str(model_pressure[1].get('w'))+"<br><b>gamma :</b> "+str(model_pressure[1].get('b'))
+       
+        self.progressText.setHtml(modelText)
 
     def onBrowseImageClick(self):
         dialog = QtWidgets.QFileDialog()
@@ -213,15 +223,18 @@ class Ui_MainWindow(object):
         if not self.rsvmModel:
             QtWidgets.QMessageBox.warning(None, "Terjadi Kesalahan", "Silahkan lakukan proses pelatihan terlebih dahulu untuk melakukan pengenalan kepribadian!")
         else:
-            x = zones.extract(self.imageToPredic)
-            y = pressure.extract(self.imageToPredic)
+            x = np.array([zones.extract(self.imageToPredic)])
+            y = np.array([pressure.extract(self.imageToPredic)])
+            
+            predict_zone = rsvm.predict_zone(x)
+            result_zone = rsvm.result_zone(predict_zone[0])
 
-            zone_class = ["Atas", "Tengah", "Bawah"]
-            predict = train_model.predict([x], self.rsvmModel[0], self.rsvmModel[1], self.rsvmModel[2], self.rsvmModel[3])
-            result = train_model.result_zone(zone_class[predict])
-            self.personalityText.setHtml(result)
+            predict_pressure = rsvm.predict_pressure(y)
+            result_pressure = rsvm.result_pressure(predict_pressure[0])
 
-            extractData = pd.DataFrame({'Rerata':[y[0]],'Persentase':[y[1]],'Zona Atas':[x[0]],'Zona Tengah':[x[1]],'Zona Bawah':[x[2]]})
+            self.personalityText.setHtml("<big>"+result_zone+"<br><br>"+result_pressure+"</big>")
+
+            extractData = pd.DataFrame({'Rerata':[y[0][0]],'Persentase':[y[0][1]],'Zona Atas':[x[0][0]],'Zona Tengah':[x[0][1]],'Zona Bawah':[x[0][2]]})
             model = DatasetModel(extractData)
             self.featureImageTable.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
             self.featureImageTable.setModel(model)

@@ -66,7 +66,7 @@ class Predictor():
         if self.strategy == 0:
             result = numpy.zeros((self.tdata.shape[0], self.label_var.size + 1))
             for i in self.label_var:
-                for j in self.label_var[numpy.where(self.label_var == i)[0] + 1 : self.label_var.shape[0]]:
+                for j in self.label_var[numpy.where(self.label_var == i)[0][0] + 1 : self.label_var.shape[0]]:
                     temp = numpy.dot(K['Kernel'][:, self.model['wb'][i][j]['col']], self.model['wb'][i][j]['model']['w'])-self.model['wb'][i][j]['model']['b']
 
                     for k in range(self.tdata.shape[0]):

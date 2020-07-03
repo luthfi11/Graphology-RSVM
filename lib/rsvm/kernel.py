@@ -34,13 +34,13 @@ def gaussianKernel(gamma, A, tildeA=numpy.array([])):
         
         AA = numpy.kron(numpy.ones((1, tildeA.shape[0])), numpy.sum(A ** 2, axis=1).reshape(A.shape[0], 1))
         tildeAA = numpy.kron(numpy.ones((1, A.shape[0])), numpy.sum(tildeA ** 2, axis=1).reshape(tildeA.shape[0], 1))
-
-        return rbf_kernel(AA, tildeAA, gamma = gamma)
+        
+        return rbf_kernel(A, tildeA, gamma = gamma)
     #Build kernel matrix without tildeA
     else:
         AA = numpy.kron(numpy.ones((1, A.shape[0])), numpy.sum(A ** 2, axis=1).reshape(A.shape[0], 1))
        
-        return rbf_kernel(AA, gamma = gamma)
+        return rbf_kernel(A, gamma = gamma)
 
 
 ###############################################################################
