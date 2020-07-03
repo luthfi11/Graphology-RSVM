@@ -197,13 +197,13 @@ class Ui_MainWindow(object):
         model_pressure = rsvm.train_pressure(self.dataset)
         self.rsvmModel = model_zone + model_pressure
 
-        modelText = "Done<br><br><b>Model Zona Atas-Tengah:</b><br><b>u :</b> "+str(model_zone[0].get('w'))+"<br><b>gamma :</b> "+str(model_zone[0].get('b'))
-        modelText += "<br><br><b>Model Zona Atas-Bawah:</b><br><b>u :</b> "+str(model_zone[1].get('w'))+"<br><b>gamma :</b> "+str(model_zone[1].get('b'))
-        modelText += "<br><br><b>Model Zona Tengah-Bawah:</b><br><b>u :</b> "+str(model_zone[2].get('w'))+"<br><b>gamma :</b> "+str(model_zone[2].get('b'))
+        modelText = "Done<br><br><b>Model Zona Atas-Tengah:</b><br><b style='text-decoration: overline;'>u</b> : "+str(model_zone[0].get('w'))+"<br><b>&gamma; :</b> "+str(model_zone[0].get('b'))
+        modelText += "<br><br><b>Model Zona Atas-Bawah:</b><br><b style='text-decoration: overline;'>u</b> : "+str(model_zone[1].get('w'))+"<br><b>&gamma; :</b> "+str(model_zone[1].get('b'))
+        modelText += "<br><br><b>Model Zona Tengah-Bawah:</b><br><b style='text-decoration: overline;'>u</b> : "+str(model_zone[2].get('w'))+"<br><b>&gamma; :</b> "+str(model_zone[2].get('b'))
         
-        modelText += "<br><hr><br><b>Model Tekanan Kuat-Sedang:</b><br><b>u :</b> "+str(model_pressure[1].get('w'))+"<br><b>gamma :</b> "+str(model_pressure[1].get('b'))
-        modelText += "<br><br><b>Model Tekanan Kuat-Ringan:</b><br><b>u :</b> "+str(model_pressure[2].get('w'))+"<br><b>gamma :</b> "+str(model_pressure[2].get('b'))
-        modelText += "<br><br><b>Model Tekanan Sedang-Ringan:</b><br><b>u :</b> "+str(model_pressure[1].get('w'))+"<br><b>gamma :</b> "+str(model_pressure[1].get('b'))
+        modelText += "<br><hr><br><b>Model Tekanan Kuat-Sedang:</b><br><b style='text-decoration: overline;'>u</b> : "+str(model_pressure[1].get('w'))+"<br><b>&gamma; :</b> "+str(model_pressure[1].get('b'))
+        modelText += "<br><br><b>Model Tekanan Kuat-Ringan:</b><br><b style='text-decoration: overline;'>u</b> : "+str(model_pressure[2].get('w'))+"<br><b>&gamma; :</b> "+str(model_pressure[2].get('b'))
+        modelText += "<br><br><b>Model Tekanan Sedang-Ringan:</b><br><b style='text-decoration: overline;'>u</b> : "+str(model_pressure[1].get('w'))+"<br><b>&gamma; :</b> "+str(model_pressure[1].get('b'))
        
         self.progressText.setHtml(modelText)
 
@@ -232,7 +232,8 @@ class Ui_MainWindow(object):
             predict_pressure = rsvm.predict_pressure(y)
             result_pressure = rsvm.result_pressure(predict_pressure[0])
 
-            self.personalityText.setHtml("<big>"+result_zone+"<br><br>"+result_pressure+"</big>")
+            result = "<big>"+result_zone+"<br><br>"+result_pressure+"</big>"
+            self.personalityText.setHtml(result)
 
             extractData = pd.DataFrame({'Rerata':[y[0][0]],'Persentase':[y[0][1]],'Zona Atas':[x[0][0]],'Zona Tengah':[x[0][1]],'Zona Bawah':[x[0][2]]})
             model = DatasetModel(extractData)

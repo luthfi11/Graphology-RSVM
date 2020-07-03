@@ -100,5 +100,6 @@ def result_pressure(_class):
 
     return personality
 
-#train_zone()
+#A = pd.read_csv('sample_data_300.csv')
+#train_zone(A)
 #predict()

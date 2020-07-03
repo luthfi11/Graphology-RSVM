@@ -27,5 +27,5 @@ def test(directory):
     return dataset
 
 
-#xx = test("D:\DataKuliah\Skripsi\App\Graphology-RSVM\sample_dataset")
-#xx.to_csv('sample_data_300.csv')
+#xx = test("D:\DataKuliah\Skripsi\App\Graphology-RSVM\dataset")
+#xx.to_csv('dataset.csv')

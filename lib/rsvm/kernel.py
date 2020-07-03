@@ -26,20 +26,32 @@ from sklearn.metrics.pairwise import rbf_kernel
 ###############################################################################
 def gaussianKernel(gamma, A, tildeA=numpy.array([])):
     #Build kernel matrix with tildeA
+    #A = A.astype(numpy.float)
     if tildeA.size > 0:
         #If dimensions of A is not equal to tildeA, then return error 
+        """
+        tildeA = tildeA.astype(numpy.float)
         if A.shape[1] != tildeA.shape[1]:
             print("\n===Error in gaussianKernel : A index must equal to tildeA===")
             return None
-        
+            
         AA = numpy.kron(numpy.ones((1, tildeA.shape[0])), numpy.sum(A ** 2, axis=1).reshape(A.shape[0], 1))
         tildeAA = numpy.kron(numpy.ones((1, A.shape[0])), numpy.sum(tildeA ** 2, axis=1).reshape(tildeA.shape[0], 1))
         
+        K = numpy.exp((-AA - tildeAA.transpose() + 2 * numpy.dot(A, tildeA.transpose())) * gamma)
+        
+        return K
+        """
         return rbf_kernel(A, tildeA, gamma = gamma)
     #Build kernel matrix without tildeA
     else:
+        """
         AA = numpy.kron(numpy.ones((1, A.shape[0])), numpy.sum(A ** 2, axis=1).reshape(A.shape[0], 1))
-       
+        
+        K = numpy.exp((-AA - AA.transpose() + 2 * numpy.dot(A, A.transpose())) * gamma)
+        
+        return K
+        """
         return rbf_kernel(A, gamma = gamma)
 
 
