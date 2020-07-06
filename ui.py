@@ -71,10 +71,16 @@ class Ui_MainWindow(object):
         self.loadByFolderButton.setObjectName("loadByFolderButton")
 
         self.trainButton = QtWidgets.QPushButton(self.tabTrain)
-        self.trainButton.setGeometry(QtCore.QRect(335, 460, 130, 35))
+        self.trainButton.setGeometry(QtCore.QRect(250, 460, 130, 35))
         self.trainButton.setFont(font)
         self.trainButton.setObjectName("trainButton")
         self.trainButton.setEnabled(False)
+
+        self.saveDatasetButton = QtWidgets.QPushButton(self.tabTrain)
+        self.saveDatasetButton.setGeometry(QtCore.QRect(400, 460, 130, 35))
+        self.saveDatasetButton.setFont(font)
+        self.saveDatasetButton.setObjectName("trainButton")
+        self.saveDatasetButton.setEnabled(False)
 
         self.progressText = QtWidgets.QTextBrowser(self.tabTrain)
         self.progressText.setGeometry(QtCore.QRect(10, 530, 780, 110))
@@ -131,6 +137,7 @@ class Ui_MainWindow(object):
         self.loadByFolderButton.clicked.connect(self.onLoadFolderClick)
         self.loadByCSVButton.clicked.connect(self.onLoadCSVClick)
         self.trainButton.clicked.connect(self.onTrainButtonClick)
+        self.saveDatasetButton.clicked.connect(self.onSaveDatasetButtonClick)
         self.browseImageButton.clicked.connect(self.onBrowseImageClick)
         self.analysisButton.clicked.connect(self.onAnalysisButtonClick)
 
@@ -144,6 +151,7 @@ class Ui_MainWindow(object):
         self.loadByCSVButton.setText("Muat Dataset Dari CSV")
         self.loadByFolderButton.setText("Muat Dataset Dari Folder")
         self.trainButton.setText("Latih Dataset")
+        self.saveDatasetButton.setText("Simpan Dataset")
         self.label_2.setText("Hasil Pelatihan")
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabTrain), "Pelatihan")
         self.browseImageButton.setText("Pilih Citra")
@@ -155,8 +163,8 @@ class Ui_MainWindow(object):
         dialog = QtWidgets.QFileDialog()
         folderName = dialog.getExistingDirectory(None, "Pilih Folder Dataset")
 
-        if folderName is not '':
-            dataset = feature_extract.test(folderName)
+        if folderName != '':
+            dataset = feature_extract.extract(folderName)
             if dataset.shape[0] > 0:
                 self.showDataset(dataset=dataset)
             else:
@@ -165,7 +173,7 @@ class Ui_MainWindow(object):
     def onLoadCSVClick(self):
         dialog = QtWidgets.QFileDialog()
         filename = dialog.getOpenFileName(None, "Pilih Dataset CSV", "", "CSV File (*.csv)")
-        if filename[0] is not '':
+        if filename[0] != '':
             dataset = pd.read_csv(filename[0])
             try:
                 if (self.datasetHeader.columns.values == dataset.columns.values).all():
@@ -189,15 +197,21 @@ class Ui_MainWindow(object):
 
         if dataset.shape[0] > 0:
             self.trainButton.setEnabled(True)
+            self.saveDatasetButton.setEnabled(True)
         else:
             self.trainButton.setEnabled(False)
+            self.saveDatasetButton.setEnabled(False)
 
     def onTrainButtonClick(self):
         model_zone = rsvm.train_zone(self.dataset)
         model_pressure = rsvm.train_pressure(self.dataset)
         self.rsvmModel = model_zone + model_pressure
 
-        modelText = "Done<br><br><b>Model Zona Atas-Tengah:</b><br><b style='text-decoration: overline;'>u</b> : "+str(model_zone[0].get('w'))+"<br><b>&gamma; :</b> "+str(model_zone[0].get('b'))
+        trainAccuracy = round(((model_zone[3][0] + model_pressure[3][0]) / 2) * 100,2)
+        testAccuracy = round(((model_zone[4][0] + model_pressure[4][0]) / 2) * 100,2)
+
+        modelText = "Akurasi Model : <b>"+str(trainAccuracy)+"%</b><br>Akurasi Pengujian : <b>"+str(testAccuracy)+"%</b>"
+        modelText += "<br><br><b>Model Zona Atas-Tengah:</b><br><b style='text-decoration: overline;'>u</b> : "+str(model_zone[0].get('w'))+"<br><b>&gamma; :</b> "+str(model_zone[0].get('b'))
         modelText += "<br><br><b>Model Zona Atas-Bawah:</b><br><b style='text-decoration: overline;'>u</b> : "+str(model_zone[1].get('w'))+"<br><b>&gamma; :</b> "+str(model_zone[1].get('b'))
         modelText += "<br><br><b>Model Zona Tengah-Bawah:</b><br><b style='text-decoration: overline;'>u</b> : "+str(model_zone[2].get('w'))+"<br><b>&gamma; :</b> "+str(model_zone[2].get('b'))
         
@@ -207,10 +221,16 @@ class Ui_MainWindow(object):
        
         self.progressText.setHtml(modelText)
 
+    def onSaveDatasetButtonClick(self):
+        fileName = QtWidgets.QFileDialog.getSaveFileName(None, "Simpan Dataset", "", "CSV File (*.csv")
+        if fileName != '':
+            self.dataset.to_csv(fileName[0], index=False)
+            QtWidgets.QMessageBox.information(None, "Informasi", "Dataset berhasil disimpan")
+
     def onBrowseImageClick(self):
         dialog = QtWidgets.QFileDialog()
         filename = dialog.getOpenFileName(None, "Pilih Gambar Tulisan Tangan", "", "Image File (*.png *.jpg *.jpeg)")
-        if filename[0] is not '':
+        if filename[0] != '':
             self.imageToPredic = filename[0]
             pixmap = QtGui.QPixmap(filename[0]).scaled(700, 240, QtCore.Qt.KeepAspectRatio)
             self.handwritingImage.setPixmap(pixmap)

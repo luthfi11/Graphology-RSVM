@@ -1,12 +1,16 @@
 import pandas as pd
 import numpy as np
 import random
+import os
 from lib.rsvm.trainer import Trainer
 from lib.rsvm.predictor import Predictor
 import pickle
 from sklearn.metrics.pairwise import rbf_kernel
 
 def train_zone(A):
+    if os.path.exists("model_zone.pkl"):
+        os.remove("model_zone.pkl")
+
     A = A[['Zona Atas', 'Zona Tengah', 'Zona Bawah', 'Dominasi Zona']]
 
     m, n = A.shape
@@ -24,21 +28,27 @@ def train_zone(A):
     A_value = np.column_stack((A_value, class_label.astype(int)))
 
     trainer = Trainer(A_value, 3)
-    trainer.make(r = 0.1 , v = 1)
+    trainer.make(r = 0.1, v = 5)
     trainer.tune(c = 100, g = 0.1, k = 1, s = 0)
     trainer.train()
     trainer.save(fname='model_zone')
+    
+    accuracy = trainer.get_accuracy()
+    train_acc = max(accuracy[0][0])
+    test_acc = max(accuracy[1][0])
 
-    subset_A = trainer.get_subset_data()
     model = trainer.set_model()
     
     model_top_middle_zone = model.get(1).get(2).get('model')
     model_top_bottom_zone = model.get(1).get(3).get('model')
     model_middle_bottom_zone = model.get(2).get(3).get('model')
 
-    return [model_top_middle_zone, model_top_bottom_zone, model_middle_bottom_zone]
+    return [model_top_middle_zone, model_top_bottom_zone, model_middle_bottom_zone, train_acc, test_acc]
 
 def train_pressure(A):
+    if os.path.exists("model_pressure.pkl"):
+        os.remove("model_pressure.pkl")
+
     A = A[['Rerata', 'Persentase', 'Tekanan Tulisan']]
 
     m, n = A.shape
@@ -56,19 +66,22 @@ def train_pressure(A):
     A_value = np.column_stack((A_value, class_label.astype(int)))
 
     trainer = Trainer(A_value, 2)
-    trainer.make(r = 0.1 , v = 1)
+    trainer.make(r = 0.1 , v = 5)
     trainer.tune(c = 100, g = 0.1, k = 1, s = 0)
     trainer.train()
     trainer.save(fname='model_pressure')
 
-    subset_A = trainer.get_subset_data()
+    accuracy = trainer.get_accuracy()
+    train_acc = max(accuracy[0][0])
+    test_acc = max(accuracy[1][0])
+
     model = trainer.set_model()
     
     model_top_middle_zone = model.get(1).get(2).get('model')
     model_top_bottom_zone = model.get(1).get(3).get('model')
     model_middle_bottom_zone = model.get(2).get(3).get('model')
 
-    return [model_top_middle_zone, model_top_bottom_zone, model_middle_bottom_zone]
+    return [model_top_middle_zone, model_top_bottom_zone, model_middle_bottom_zone, train_acc, test_acc]
 
 def predict_zone(x):
     predictor = Predictor('model_zone.pkl')
@@ -100,6 +113,9 @@ def result_pressure(_class):
 
     return personality
 
-#A = pd.read_csv('sample_data_300.csv')
-#train_zone(A)
-#predict()
+
+A = pd.read_csv('dataset.csv')
+train_zone(A)
+
+x = np.array([[62,23,12]])
+print(predict_zone(x))

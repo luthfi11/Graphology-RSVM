@@ -4,7 +4,7 @@ import zones
 import pandas as pd
 import numpy as np
 
-def test(directory):
+def extract(directory):
     dataset = pd.DataFrame({'Nama File':[],'Rerata':[],'Persentase':[],'Zona Atas':[],'Zona Tengah':[],'Zona Bawah':[],
         'Tekanan Tulisan':[],'Dominasi Zona':[]})
 
@@ -26,6 +26,5 @@ def test(directory):
     
     return dataset
 
-
-#xx = test("D:\DataKuliah\Skripsi\App\Graphology-RSVM\dataset")
-#xx.to_csv('dataset.csv')
+#xx = extract(r"D:\DataKuliah\Skripsi\App\Newfolder\ekstrak\pressure")
+#xx.to_csv('test.csv', index=False)

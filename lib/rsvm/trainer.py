@@ -53,6 +53,12 @@ class Trainer():
 
         self.handler = self.make() and self.tune()
 
+        self.trainAccuracy = []
+        self.validationAccuracy = []
+
+        self.lowestTErr = 0
+        self.lowestVErr = 0
+
 
 ###############################################################################
 
@@ -169,11 +175,18 @@ class Trainer():
                 VErr[ith] = self.errorEstimate(self.setIndex['fold'][ith]['test'], result)
             stop_t = time.time()
 
+           
             print("\nTraining accuracy:\n")
             print(1 - TErr)
             print("\nValidation accuracy:\n")
             print(1 - VErr)
             print("\nTraining model using %f s..." %(stop_t - start_t))
+
+            self.trainAccuracy += [1-TErr]
+            self.validationAccuracy += [1-VErr]
+
+            self.lowestTErr = numpy.where(TErr == numpy.min(TErr))[0][0]
+            self.lowestVErr = numpy.where(VErr == numpy.min(VErr))[0][0]
 
             result = {'TAcc': 1 - numpy.mean(TErr), 'VAcc': 1 - numpy.mean(VErr), 'time': stop_t - start_t} 
             return result
@@ -335,9 +348,9 @@ class Trainer():
         pass
 
     def save(self, fname='model'):
-        if self.numFold == 1 and self.handler == True:
+        if self.handler == True:
             output={}
-            output["wb"] = self.model[0]
+            output["wb"] = self.model[self.lowestVErr]
             output["C"] = self.C
             output["gamma"] = self.gamma
             output["kernelType"] = self.kernelType
@@ -353,15 +366,16 @@ class Trainer():
             except:
                 print("\n===Error in trainer-save : can't save model, maybe need to check file name===")
                 return False
+      
         else:
             print("\n===Error in trainer-save : model can't use multi-fold===")
             return False
 
-    def get_subset_data(self):
-        return self.rdata
-
     def set_model(self):
-        return self.model[0]
+        return self.model[self.lowestVErr]
+
+    def get_accuracy(self):
+        return [self.trainAccuracy, self.validationAccuracy]
 
     def close(self):
         try:
