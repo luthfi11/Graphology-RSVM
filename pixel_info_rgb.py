@@ -1,3 +1,4 @@
+"""
 from __future__ import with_statement
 from PIL import Image
  
@@ -18,3 +19,13 @@ with open('output_file.csv', 'w+') as f:
       b = pix[y,x][2]
       f.write('{0} {1} {2},'.format(r,g,b))
     f.write('\n')
+"""
+
+
+import pandas as pd
+
+A = pd.read_csv('test_data.csv')
+A = A.loc[(A['Tekanan Tulisan'] == "Sedang")]
+
+sample = A.sample(n = 679)
+sample.to_csv('test_data(3).csv', index=False)

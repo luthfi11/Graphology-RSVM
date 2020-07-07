@@ -223,7 +223,7 @@ class Ui_MainWindow(object):
 
     def onSaveDatasetButtonClick(self):
         fileName = QtWidgets.QFileDialog.getSaveFileName(None, "Simpan Dataset", "", "CSV File (*.csv")
-        if fileName != '':
+        if fileName[0] != '':
             self.dataset.to_csv(fileName[0], index=False)
             QtWidgets.QMessageBox.information(None, "Informasi", "Dataset berhasil disimpan")
 

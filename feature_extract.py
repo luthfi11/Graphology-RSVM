@@ -26,5 +26,5 @@ def extract(directory):
     
     return dataset
 
-#xx = extract(r"D:\DataKuliah\Skripsi\App\Newfolder\ekstrak\pressure")
-#xx.to_csv('test.csv', index=False)
+#xx = extract(r"D:\DataKuliah\Skripsi\App\Graphology-RSVM\dataset")
+#xx.to_csv('test_data.csv', index=False)

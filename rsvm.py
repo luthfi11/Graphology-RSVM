@@ -28,7 +28,7 @@ def train_zone(A):
     A_value = np.column_stack((A_value, class_label.astype(int)))
 
     trainer = Trainer(A_value, 3)
-    trainer.make(r = 0.1, v = 5)
+    trainer.make(r = 0.1, v = 1)
     trainer.tune(c = 100, g = 0.1, k = 1, s = 0)
     trainer.train()
     trainer.save(fname='model_zone')
@@ -66,7 +66,7 @@ def train_pressure(A):
     A_value = np.column_stack((A_value, class_label.astype(int)))
 
     trainer = Trainer(A_value, 2)
-    trainer.make(r = 0.1 , v = 5)
+    trainer.make(r = 0.1 , v = 1)
     trainer.tune(c = 100, g = 0.1, k = 1, s = 0)
     trainer.train()
     trainer.save(fname='model_pressure')
@@ -113,9 +113,10 @@ def result_pressure(_class):
 
     return personality
 
-
+"""
 A = pd.read_csv('dataset.csv')
 train_zone(A)
 
-x = np.array([[62,23,12]])
+x = np.array([[37,42,52]])
 print(predict_zone(x))
+"""

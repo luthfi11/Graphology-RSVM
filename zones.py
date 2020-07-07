@@ -14,7 +14,7 @@ def setZoneClass(separators):
     print("Lebar Zona Bawah : ",lowerZoneSize)
     """
 
-    dominanceMinimum = 0.7
+    dominanceMinimum = 0.6
 
     zoneDominance = ""
     if upperZoneSize > dominanceMinimum*(middleZoneSize + lowerZoneSize):
