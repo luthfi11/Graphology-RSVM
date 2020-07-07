@@ -120,6 +120,3 @@ def main():
     img = cv2.imread('dataset/h06-089-s01-00.png')
     
     findZone(img)
-
-main()
-cv2.waitKey(0)

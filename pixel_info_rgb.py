@@ -24,8 +24,8 @@ with open('output_file.csv', 'w+') as f:
 
 import pandas as pd
 
-A = pd.read_csv('test_data.csv')
-A = A.loc[(A['Tekanan Tulisan'] == "Sedang")]
+A = pd.read_csv('dataset_csv/dataset.csv')
+A = A.loc[(A['Tekanan Tulisan'] == "Kuat") & (A['Dominasi Zona'] == "Atas")]
 
-sample = A.sample(n = 679)
-sample.to_csv('test_data(3).csv', index=False)
+sample = A.sample(n = 228)
+sample.to_csv('aa/test(6).csv', index=False)

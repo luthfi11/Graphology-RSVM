@@ -6,23 +6,21 @@ from sklearn.svm import SVC
 import pandas as pd
 import numpy as np
 
-print(__doc__)
-
-A = pd.read_csv('sample_data_300.csv')
+A = pd.read_csv('dataset_csv/dataset.csv')
 
 m, n = A.shape
 A_value = np.array(A.values[:,range(1,3)])
 
 class_label = np.array([[]])
 for i in range(m):
-        if A.iloc[i]['Dominasi Zona'] == "Atas":
+        if A.iloc[i]['Tekanan Tulisan'] == "Kuat":
             class_label = np.append(class_label, [1])
-        elif A.iloc[i]['Dominasi Zona'] == "Tengah":
+        elif A.iloc[i]['Tekanan Tulisan'] == "Sedang":
             class_label = np.append(class_label, [2])
-        elif A.iloc[i]['Dominasi Zona'] == "Bawah":
+        elif A.iloc[i]['Tekanan Tulisan'] == "Ringan":
             class_label = np.append(class_label, [3])
 
-X = A_value
+X = A[['Rerata', 'Persentase']]
 y = class_label
 
 # Split the dataset in two equal parts

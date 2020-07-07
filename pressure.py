@@ -82,5 +82,3 @@ def main():
 
     cv2.waitKey(0)
     return
-
-main()

@@ -6,6 +6,7 @@ from lib.rsvm.trainer import Trainer
 from lib.rsvm.predictor import Predictor
 import pickle
 from sklearn.metrics.pairwise import rbf_kernel
+from statistics import mean
 
 def train_zone(A):
     if os.path.exists("model_zone.pkl"):
@@ -27,15 +28,17 @@ def train_zone(A):
 
     A_value = np.column_stack((A_value, class_label.astype(int)))
 
+    numfold = 5
+
     trainer = Trainer(A_value, 3)
-    trainer.make(r = 0.1, v = 1)
-    trainer.tune(c = 100, g = 0.1, k = 1, s = 0)
+    trainer.make(r = 0.1, v = numfold)
+    trainer.tune(c = 100, g = 0.0001, k = 1, s = 0)
     trainer.train()
     trainer.save(fname='model_zone')
     
     accuracy = trainer.get_accuracy()
-    train_acc = max(accuracy[0][0])
-    test_acc = max(accuracy[1][0])
+    train_acc = sum(accuracy[0][0])/numfold
+    test_acc = sum(accuracy[1][0])/numfold
 
     model = trainer.set_model()
     
@@ -65,15 +68,17 @@ def train_pressure(A):
 
     A_value = np.column_stack((A_value, class_label.astype(int)))
 
+    numfold = 5
+
     trainer = Trainer(A_value, 2)
-    trainer.make(r = 0.1 , v = 1)
-    trainer.tune(c = 100, g = 0.1, k = 1, s = 0)
+    trainer.make(r = 0.1 , v = numfold)
+    trainer.tune(c = 100, g = 0.0001, k = 1, s = 0)
     trainer.train()
     trainer.save(fname='model_pressure')
 
     accuracy = trainer.get_accuracy()
-    train_acc = max(accuracy[0][0])
-    test_acc = max(accuracy[1][0])
+    train_acc = sum(accuracy[0][0])/numfold
+    test_acc = sum(accuracy[1][0])/numfold
 
     model = trainer.set_model()
     
@@ -113,10 +118,9 @@ def result_pressure(_class):
 
     return personality
 
-"""
-A = pd.read_csv('dataset.csv')
-train_zone(A)
 
-x = np.array([[37,42,52]])
-print(predict_zone(x))
-"""
+#A = pd.read_csv('dataset_csv/dataset.csv')
+#train_zone(A)
+
+#x = np.array([[37,42,52]])
+#print(predict_zone(x))
