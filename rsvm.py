@@ -9,8 +9,8 @@ from sklearn.metrics.pairwise import rbf_kernel
 from statistics import mean
 
 def train_zone(A):
-    if os.path.exists("model_zone.pkl"):
-        os.remove("model_zone.pkl")
+    #if os.path.exists("model_zone.pkl"):
+    #    os.remove("model_zone.pkl")
 
     A = A[['Zona Atas', 'Zona Tengah', 'Zona Bawah', 'Dominasi Zona']]
 
@@ -34,7 +34,7 @@ def train_zone(A):
     trainer.make(r = 0.1, v = numfold)
     trainer.tune(c = 100, g = 0.0001, k = 1, s = 0)
     trainer.train()
-    trainer.save(fname='model_zone')
+    #trainer.save(fname='model_zone')
     
     accuracy = trainer.get_accuracy()
     train_acc = sum(accuracy[0][0])/numfold
@@ -49,8 +49,8 @@ def train_zone(A):
     return [model_top_middle_zone, model_top_bottom_zone, model_middle_bottom_zone, train_acc, test_acc]
 
 def train_pressure(A):
-    if os.path.exists("model_pressure.pkl"):
-        os.remove("model_pressure.pkl")
+    #if os.path.exists("model_pressure.pkl"):
+    #    os.remove("model_pressure.pkl")
 
     A = A[['Rerata', 'Persentase', 'Tekanan Tulisan']]
 
@@ -74,7 +74,7 @@ def train_pressure(A):
     trainer.make(r = 0.1 , v = numfold)
     trainer.tune(c = 100, g = 0.0001, k = 1, s = 0)
     trainer.train()
-    trainer.save(fname='model_pressure')
+    #trainer.save(fname='model_pressure')
 
     accuracy = trainer.get_accuracy()
     train_acc = sum(accuracy[0][0])/numfold

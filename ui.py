@@ -110,8 +110,20 @@ class Ui_MainWindow(object):
         self.analysisButton.setObjectName("analysisButton")
         self.analysisButton.setEnabled(False)
 
+        self.labelFeature = QtWidgets.QLabel(self.testTab)
+        self.labelFeature.setGeometry(QtCore.QRect(42, 360, 1101, 16))
+        self.labelFeature.setObjectName("labelFeature")
+
+        self.labelClass = QtWidgets.QLabel(self.testTab)
+        self.labelClass.setGeometry(QtCore.QRect(570, 360, 1101, 16))
+        self.labelClass.setObjectName("labelFeature")
+
+        self.classText = QtWidgets.QTextBrowser(self.testTab)
+        self.classText.setGeometry(QtCore.QRect(570, 385, 180, 65))
+        self.classText.setObjectName("personalityText")
+
         self.featureImageTable = QtWidgets.QTableView(self.testTab)
-        self.featureImageTable.setGeometry(QtCore.QRect(145, 370, 510, 65))
+        self.featureImageTable.setGeometry(QtCore.QRect(40, 385, 511, 65))
         self.featureImageTable.setFont(font)
         self.featureImageTable.setObjectName("featureImageTable")
 
@@ -120,11 +132,11 @@ class Ui_MainWindow(object):
         self.featureImageTable.setModel(model)
 
         self.personalityText = QtWidgets.QTextBrowser(self.testTab)
-        self.personalityText.setGeometry(QtCore.QRect(40, 480, 711, 141))
+        self.personalityText.setGeometry(QtCore.QRect(40, 490, 711, 141))
         self.personalityText.setObjectName("personalityText")
 
         self.label_3 = QtWidgets.QLabel(self.testTab)
-        self.label_3.setGeometry(QtCore.QRect(42, 450, 91, 16))
+        self.label_3.setGeometry(QtCore.QRect(42, 465, 91, 16))
         self.label_3.setObjectName("label_3")
 
         self.tabWidget.addTab(self.testTab, "")
@@ -156,6 +168,8 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabTrain), "Pelatihan")
         self.browseImageButton.setText("Pilih Citra")
         self.analysisButton.setText("Analisis Kepribadian")
+        self.labelFeature.setText("Hasil Ekstraksi Ciri")
+        self.labelClass.setText("Kelas")
         self.label_3.setText("Kepribadian")
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.testTab), "Pengujian")
 
@@ -207,10 +221,10 @@ class Ui_MainWindow(object):
         model_pressure = rsvm.train_pressure(self.dataset)
         self.rsvmModel = model_zone + model_pressure
 
-        trainAccuracy = round(((model_zone[3][0] + model_pressure[3][0]) / 2) * 100,2)
-        testAccuracy = round(((model_zone[4][0] + model_pressure[4][0]) / 2) * 100,2)
+        zoneAccuracy = round(model_zone[4][0] * 100, 2)
+        pressureAccuracy = round(model_pressure[4][0] * 100, 2)
 
-        modelText = "Akurasi Model : <b>"+str(trainAccuracy)+"%</b><br>Akurasi Pengujian : <b>"+str(testAccuracy)+"%</b>"
+        modelText = "Akurasi Fitur Dominasi Zona : <b>"+str(zoneAccuracy)+"%</b><br>Akurasi Fitur Tekanan Tulisan : <b>"+str(pressureAccuracy)+"%</b>"
         modelText += "<br><br><b>Model Zona Atas-Tengah:</b><br><b style='text-decoration: overline;'>u</b> : "+str(model_zone[0].get('w'))+"<br><b>&gamma; :</b> "+str(model_zone[0].get('b'))
         modelText += "<br><br><b>Model Zona Atas-Bawah:</b><br><b style='text-decoration: overline;'>u</b> : "+str(model_zone[1].get('w'))+"<br><b>&gamma; :</b> "+str(model_zone[1].get('b'))
         modelText += "<br><br><b>Model Zona Tengah-Bawah:</b><br><b style='text-decoration: overline;'>u</b> : "+str(model_zone[2].get('w'))+"<br><b>&gamma; :</b> "+str(model_zone[2].get('b'))
@@ -259,6 +273,12 @@ class Ui_MainWindow(object):
             model = DatasetModel(extractData)
             self.featureImageTable.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
             self.featureImageTable.setModel(model)
+
+            listZone = ["Atas", "Tengah", "Bawah"]
+            listPressure = ["Kuat", "Sedang", "Ringan"]
+            classResult = "Dominasi Zona : <b>"+listZone[int(predict_zone[0][0])-1]+"</b>"
+            classResult += "<br>Tekanan Tulisan : <b>"+listPressure[int(predict_pressure[0][0])-1]+"</b>"
+            self.classText.setHtml(classResult)
         
 
 class DatasetModel(QtCore.QAbstractTableModel):

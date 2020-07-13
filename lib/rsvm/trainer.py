@@ -176,9 +176,9 @@ class Trainer():
             stop_t = time.time()
 
            
-            print("\nTraining accuracy:\n")
-            print(1 - TErr)
-            print("\nValidation accuracy:\n")
+            #print("\nTraining accuracy:\n")
+            #print(1 - TErr)
+            print("\nAccuracy:\n")
             print(1 - VErr)
             print("\nTraining model using %f s..." %(stop_t - start_t))
 
@@ -331,7 +331,6 @@ class Trainer():
             if i == False:
                 ErrV = ErrV + 1
         return float(ErrV) / compLabel.shape[0]
-
 
     def getReduce(self, params):
         if params == 1:
