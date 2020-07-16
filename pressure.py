@@ -33,22 +33,8 @@ def pressure(image):
     
     show_histogram(median)
     """
-    return average_intensity, percentage, determine_pen_pressure(percentage)
+    return average_intensity, percentage
 
-
-def determine_pen_pressure(raw_pen_pressure):
-	comment = ""
-	if(raw_pen_pressure < 30.0):
-		pen_pressure = 0
-		comment = "Kuat"
-	elif(raw_pen_pressure < 40.0):
-		pen_pressure = 1
-		comment = "Sedang"
-	else:
-		pen_pressure = 2
-		comment = "Ringan"
-		
-	return comment
 
 def show_histogram(img):
     fig, ax = plt.subplots()
@@ -60,16 +46,9 @@ def show_histogram(img):
     fig.tight_layout()
     plt.show()
 
-
-def start(file_name):
-	image = cv2.imread(file_name)
-	total, count, clas = pressure(image)
-	
-	return [total, count, clas]
-
 def extract(file_name):
     image = cv2.imread(file_name)
-    total, count, clas = pressure(image)
+    total, count = pressure(image)
 	
     return [total, count]
 

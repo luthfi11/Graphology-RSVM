@@ -3,29 +3,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 from skimage import morphology
 
-def setZoneClass(separators):
-    upperZoneSize = separators[1] - separators[0]
-    middleZoneSize = separators[2] - separators[1]
-    lowerZoneSize = separators[3] - separators[2]
-
-    """
-    print("Lebar Zona Atas : ",upperZoneSize)
-    print("Lebar Zona Tengah : ",middleZoneSize)
-    print("Lebar Zona Bawah : ",lowerZoneSize)
-    """
-
-    dominanceMinimum = 0.6
-
-    zoneDominance = ""
-    if upperZoneSize > dominanceMinimum*(middleZoneSize + lowerZoneSize):
-        zoneDominance = "Atas"
-    elif lowerZoneSize > dominanceMinimum*(upperZoneSize + middleZoneSize):
-        zoneDominance = "Bawah"
-    else:
-        zoneDominance = "Tengah"
-
-    return zoneDominance
-
 
 def findZone(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -93,8 +70,7 @@ def findZone(img):
     middle = separators[2] - separators[1]
     bottom = separators[3] - separators[2]
     
-
-    return top, middle, bottom, setZoneClass(separators)
+    return top, middle, bottom
 
 def show_histogram(img, label):
     plt.barh(label, img, height=1)
@@ -102,17 +78,10 @@ def show_histogram(img, label):
     plt.ylabel("Baris Citra (y)")
     plt.xlabel("Jumlah Intensitas Piksel")
     plt.show()
-    
-
-def start(file_name):
-	image = cv2.imread(file_name)
-	top, middle, bottom, clas = findZone(image)
-	
-	return [top, middle, bottom, clas]
 
 def extract(file_name):
     image = cv2.imread(file_name)
-    top, middle, bottom, clas = findZone(image)
+    top, middle, bottom = findZone(image)
 	
     return [top, middle, bottom]
 

@@ -53,7 +53,6 @@ class Trainer():
 
         self.handler = self.make() and self.tune()
 
-        self.trainAccuracy = []
         self.validationAccuracy = []
 
         self.lowestTErr = 0
@@ -175,14 +174,10 @@ class Trainer():
                 VErr[ith] = self.errorEstimate(self.setIndex['fold'][ith]['test'], result)
             stop_t = time.time()
 
-           
-            #print("\nTraining accuracy:\n")
-            #print(1 - TErr)
             print("\nAccuracy:\n")
             print(1 - VErr)
             print("\nTraining model using %f s..." %(stop_t - start_t))
 
-            self.trainAccuracy += [1-TErr]
             self.validationAccuracy += [1-VErr]
 
             self.lowestTErr = numpy.where(TErr == numpy.min(TErr))[0][0]
@@ -374,7 +369,7 @@ class Trainer():
         return self.model[self.lowestVErr]
 
     def get_accuracy(self):
-        return [self.trainAccuracy, self.validationAccuracy]
+        return self.validationAccuracy
 
     def close(self):
         try:

@@ -36,17 +36,15 @@ def train_zone(A):
     trainer.train()
     #trainer.save(fname='model_zone')
     
-    accuracy = trainer.get_accuracy()
-    train_acc = sum(accuracy[0][0])/numfold
-    test_acc = sum(accuracy[1][0])/numfold
-
+    accuracy = sum(trainer.get_accuracy()[0])/5
+    
     model = trainer.set_model()
     
     model_top_middle_zone = model.get(1).get(2).get('model')
     model_top_bottom_zone = model.get(1).get(3).get('model')
     model_middle_bottom_zone = model.get(2).get(3).get('model')
 
-    return [model_top_middle_zone, model_top_bottom_zone, model_middle_bottom_zone, train_acc, test_acc]
+    return [model_top_middle_zone, model_top_bottom_zone, model_middle_bottom_zone, accuracy]
 
 def train_pressure(A):
     #if os.path.exists("model_pressure.pkl"):
@@ -76,9 +74,9 @@ def train_pressure(A):
     trainer.train()
     #trainer.save(fname='model_pressure')
 
-    accuracy = trainer.get_accuracy()
-    train_acc = sum(accuracy[0][0])/numfold
-    test_acc = sum(accuracy[1][0])/numfold
+    accuracy = sum(trainer.get_accuracy()[0])/5
+
+    print(accuracy)
 
     model = trainer.set_model()
     
@@ -86,7 +84,7 @@ def train_pressure(A):
     model_top_bottom_zone = model.get(1).get(3).get('model')
     model_middle_bottom_zone = model.get(2).get(3).get('model')
 
-    return [model_top_middle_zone, model_top_bottom_zone, model_middle_bottom_zone, train_acc, test_acc]
+    return [model_top_middle_zone, model_top_bottom_zone, model_middle_bottom_zone, accuracy]
 
 def predict_zone(x):
     predictor = Predictor('model_zone.pkl')
